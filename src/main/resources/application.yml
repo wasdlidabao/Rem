@@ -1,0 +1,16 @@
+server:
+  port: 7890
+spring:
+  application:
+    name: rem
+timer:
+  upload: 0/5 * * * * ?  #5s一次
+  url: http://142.31.3.34:7891
+storage:
+  connectionRequestTimeout: 200
+  readTimeout: 30000
+  connectTimeout: 2000
+  maxTotal: 10
+  defaultMaxPerRoute: 5
+  retryCount: 1
+  requestSentRetryEnabled: true
