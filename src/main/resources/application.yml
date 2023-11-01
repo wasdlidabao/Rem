@@ -5,7 +5,7 @@ spring:
     name: rem
 timer:
   upload: 0/5 * * * * ?  #5s一次
-  url: http://142.31.3.34:7891
+  url: http://127.0.0.1:7891
 storage:
   connectionRequestTimeout: 200
   readTimeout: 30000

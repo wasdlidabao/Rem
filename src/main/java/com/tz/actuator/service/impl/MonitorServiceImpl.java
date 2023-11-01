@@ -24,16 +24,16 @@ public class MonitorServiceImpl implements MonitorService {
 
     @Override
     public ServerVO getByActuator() {
-        AtomicReference<CpuVO> cpuCompletableFuture = new AtomicReference<>();
-        AtomicReference<MemoryVO> memoryCompletableFuture = new AtomicReference<>();
+        AtomicReference<TopVO> cpuCompletableFuture = new AtomicReference<>();
+        AtomicReference<FreeVO> memoryCompletableFuture = new AtomicReference<>();
         AtomicReference<List<GpuVO>> gpuCompletableFuture = new AtomicReference<>();
         AtomicReference<NetVO> netCompletableFuture = new AtomicReference<>();
         Thread cpuThread = new Thread(() ->
-                cpuCompletableFuture.set(buildCpu())
+                cpuCompletableFuture.set(buildTop())
         );
         cpuThread.start();
         Thread memoryThread = new Thread(() ->
-                memoryCompletableFuture.set(buildMemory())
+                memoryCompletableFuture.set(buildFree())
         );
         memoryThread.start();
         Thread gpuThread = new Thread(() ->
@@ -62,13 +62,21 @@ public class MonitorServiceImpl implements MonitorService {
             return new ServerVO()
                     .setCpu(cpuCompletableFuture.get())
                     .setMemory(memoryCompletableFuture.get())
-                    .setDiskSpace(buildDiskSpace())
+                    .setFileSystems(buildDiskSpace())
                     .setGpus(gpuCompletableFuture.get())
                     .setNet(netCompletableFuture.get());
         } catch (Exception e) {
             log.error("数据异常", e);
         }
-        return new ServerVO().setDiskSpace(buildDiskSpace());
+        return new ServerVO().setFileSystems(buildDiskSpace());
+    }
+
+    private TopVO buildTop() {
+        return CommandUtil.runTop();
+    }
+
+    private FreeVO buildFree() {
+        return CommandUtil.runFree();
     }
 
     private CpuVO buildCpu() {
@@ -132,7 +140,11 @@ public class MonitorServiceImpl implements MonitorService {
         return memoryVO;
     }
 
-    private DiskSpaceVO buildDiskSpace() {
+    private List<FileSystemVO> buildDiskSpace() {
+        return CommandUtil.runDiskSpace4List();
+    }
+
+    private DiskSpaceVO buildDiskSpace2() {
         File[] files = File.listRoots();
         long total = 0, free = 0, un = 0;
         for (File file : files) {
