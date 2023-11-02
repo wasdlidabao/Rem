@@ -5,7 +5,7 @@ spring:
     name: rem
 timer:
   upload: 0/5 * * * * ?  #5s一次
-  url: http://127.0.0.1:7891
+  url: http://192.168.2.58:7891
 storage:
   connectionRequestTimeout: 200
   readTimeout: 30000
@@ -14,3 +14,9 @@ storage:
   defaultMaxPerRoute: 5
   retryCount: 1
   requestSentRetryEnabled: true
+file:
+  paths:
+    - "/video"
+    - "/home/workspace/minio_data"
+    - "/home/tzwy/workspace/aits"
+    - "/home/tzwy/minio_data"

@@ -2,6 +2,7 @@ package com.tz.actuator.domain.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
@@ -13,6 +14,7 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 @AllArgsConstructor
+@NoArgsConstructor
 public class FileSystemVO {
 
     /**
@@ -34,7 +36,7 @@ public class FileSystemVO {
     /**
      * 使用率
      */
-    String use;
+    String useRate;
     /**
      * 挂载点
      */
@@ -47,7 +49,7 @@ public class FileSystemVO {
                 ", size='" + size + '\'' +
                 ", used='" + used + '\'' +
                 ", avail='" + avail + '\'' +
-                ", use='" + use + '\'' +
+                ", use='" + useRate + '\'' +
                 ", mountedOn='" + mountedOn + '\'' +
                 '}';
     }

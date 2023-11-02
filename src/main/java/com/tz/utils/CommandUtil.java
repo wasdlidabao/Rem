@@ -129,12 +129,13 @@ public class CommandUtil {
                 String fileSystem = parts[0];
                 String size = parts[1];
                 String used = parts[2];
-                String available = parts[3];
+                String available = toGB(parts[3]) + "G";
                 String usePercentage = parts[4];
                 String mountPoint = parts[5];
-
-                // 对解析的数据进行进一步处理或存储
-                results.add(new FileSystemVO(fileSystem, size, used, available, usePercentage, mountPoint));
+                if (!StringUtils.equals(fileSystem, "Filesystem")) {
+                    // 对解析的数据进行进一步处理或存储
+                    results.add(new FileSystemVO(fileSystem, size, used, available, usePercentage, mountPoint));
+                }
             }
         } catch (IOException e) {
             log.error("command execute faild:", e);
@@ -148,6 +149,48 @@ public class CommandUtil {
         }
         results.forEach(System.out::println);
         return results;
+    }
+
+    public static FileSystemVO runDFParam(String param) {
+        FileSystemVO fileSystemVO = null;
+        Scanner input = null;
+        Process process = null;
+        try {
+            String cmds = String.format("df -h %s", param);
+            process = Runtime.getRuntime().exec(cmds);
+            try {
+                //等待命令执行完成
+                process.waitFor(1, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                log.error("command process waitFor faild:", e);
+            }
+            InputStream is = process.getInputStream();
+            input = new Scanner(is);
+            while (input.hasNextLine()) {
+                String result = input.nextLine();
+                String[] parts = result.split("\\s+"); // 使用空格作为分隔符拆分每一行数据
+                String fileSystem = parts[0];
+                String size = parts[1];
+                String used = parts[2];
+                String available = toGB(parts[3]) + "G";
+                String usePercentage = parts[4];
+                String mountPoint = parts[5];
+                if (!StringUtils.equals(fileSystem, "Filesystem")) {
+                    // 对解析的数据进行进一步处理或存储
+                    fileSystemVO = new FileSystemVO(fileSystem, size, used, available, usePercentage, param);
+                }
+            }
+        } catch (IOException e) {
+            log.error("command execute faild:", e);
+        } finally {
+            if (input != null) {
+                input.close();
+            }
+            if (process != null) {
+                process.destroy();
+            }
+        }
+        return fileSystemVO;
     }
 
     public static TopVO runTop() {
@@ -228,7 +271,8 @@ public class CommandUtil {
                     String[] parts = result.split("\\s+"); // 使用空格作为分隔符拆分每一行数据
                     freeVO.setTotal(parts[1])
                             .setUsed(parts[2])
-                            .setFree(parts[3])
+                            // 需要处理单位,默认统一为GB
+                            .setFree(toGB(parts[3]) + "G")
                             .setCache(parts[5])
                             .setAvailable(parts[6]);
                 }
@@ -249,7 +293,7 @@ public class CommandUtil {
 
     // KiB Mem : 32825272 total,  2301564 free, 14787824 used, 15735884 buff/cache
     // KiB Mem : 39472169+total, 22054708+free, 82035488 used, 92139104 buff/cache
-    public static void main(String[] args) {
+    public static void main2(String[] args) {
         String result1 = "KiB Mem : 32825272 total,  2301564 free, 14787824 used, 15735884 buff/cache";
         String result2 = "KiB Mem : 39472169+total, 22054708+free, 82035488 used, 92139104 buff/cache";
         print(result1);
@@ -263,5 +307,50 @@ public class CommandUtil {
         for (String s : split) {
             log.info(s.replace(" ", "").replace(":", "").replace("total", "").replace("free", "").replace("used", "").replace("buff/cache", ""));
         }
+    }
+
+    private static String toGB(String resource) {
+        if (StringUtils.isBlank(resource)) return null;
+        String firstStr = resource.substring(0, resource.length() - 1);
+        String lastStr = resource.substring(resource.length() - 1);
+        switch (lastStr) {
+            case "T":
+                firstStr = String.valueOf((Float.valueOf(firstStr)) * 1024);
+                break;
+            case "G":
+                break;
+            case "K":
+                firstStr = String.valueOf((Float.valueOf(firstStr)) / 1024);
+                break;
+            case "M":
+                firstStr = String.valueOf((Float.valueOf(firstStr)) / (1024 * 2));
+                break;
+            case "B":
+                firstStr = String.valueOf((Float.valueOf(firstStr)) / (1024 * 3));
+                break;
+            case "i":
+                firstStr = resource.substring(0, resource.length() - 2);
+                lastStr = resource.substring(resource.length() - 2);
+                switch (lastStr) {
+                    case "Ti":
+                        firstStr = String.valueOf((Float.valueOf(firstStr)) * 1024);
+                        break;
+                    case "Gi":
+                        break;
+                    case "Ki":
+                        firstStr = String.valueOf((Float.valueOf(firstStr)) / 1024);
+                        break;
+                    case "Mi":
+                        firstStr = String.valueOf((Float.valueOf(firstStr)) / (1024 * 2));
+                        break;
+                    case "Bi":
+                        firstStr = String.valueOf((Float.valueOf(firstStr)) / (1024 * 3));
+                        break;
+                    default:
+                }
+                break;
+            default:
+        }
+        return firstStr;
     }
 }
